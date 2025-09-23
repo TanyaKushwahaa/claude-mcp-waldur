@@ -8,14 +8,12 @@ These rules are written in the docstrings so the LLM knows how to use them
 safely and consistently.
 """
 
-import os
-import json
 import httpx
 from dotenv import load_dotenv
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 from config import WALDUR_BASE_URL, VERIFY_SSL
 
-from utils import normalise_waldur_token
+from src.utils import normalise_waldur_token
 
 load_dotenv()
 
@@ -37,9 +35,11 @@ async def get_project_short_name(WALDUR_API_TOKEN: str, project_name: str, custo
     Returns:
         str: Project short name or error message.
     """
+    
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)  
     url = WALDUR_BASE_URL + "openportal/project_short_name/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}",
+        "Authorization": WALDUR_API_TOKEN,
         "Content-Type":"application/json"
     }
     params = {
@@ -96,9 +96,11 @@ async def get_customer_spend_info(WALDUR_API_TOKEN: str, customer: str | None = 
                     },
                 },
             }
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)  
     url = WALDUR_BASE_URL + "openportal/customer_spend_info/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}"
+        "Authorization": WALDUR_API_TOKEN
     }
     params = {
         "customer":customer
@@ -142,9 +144,11 @@ async def get_user_info(WALDUR_API_TOKEN, email):
     if not email:
         return "Missing required parameter: email."
     
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)  
     url = WALDUR_BASE_URL + "openportal/whoami/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}",
+        "Authorization": WALDUR_API_TOKEN,
         "Content-Type":"application/json"
     }
     params = {
@@ -191,8 +195,10 @@ async def get_project_users(WALDUR_API_TOKEN, project_name):
     if not project_name:
         return "Missing required parameter: project name."
     
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)    
     url = WALDUR_BASE_URL + "openportal/list_project_users/"
-    headers = {"Authorization": f"Token {WALDUR_API_TOKEN}","Content-Type":"application/json"}
+    headers = {"Authorization": WALDUR_API_TOKEN,"Content-Type":"application/json"}
     params = {"project_name": project_name}
 
     async with httpx.AsyncClient(follow_redirects = True, verify = VERIFY_SSL) as client:
