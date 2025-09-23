@@ -3,18 +3,18 @@
           "command":"uv",
           "args":[
             "--directory",
-            "claude-mcp-waldur/servers/",
+            "/path/to/your/claude-mcp-waldur",
             "run",
-            "read-only.py"
+            "servers/read-only.py"
           ]
       },
       "read-write":{
           "command":"uv",
           "args":[
             "--directory",
-            "claude-mcp-waldur/servers/",
+            "/patch/to/your/claude-mcp-waldur",
             "run",
-            "read-write.py"
+            "servers/read-write.py"
           ]
       }
     }
