@@ -22,9 +22,7 @@ import numpy as np
 import pickle
 import faiss # type: ignore
 import asyncio
-from mcp_instance import mcp
-
-from utils import normalise_waldur_token
+from src.mcp_instance import mcp
 
 model = None
 cache_dir = "./cache"
