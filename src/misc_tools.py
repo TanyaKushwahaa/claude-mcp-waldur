@@ -92,7 +92,7 @@ def greet_user(user_query: str) -> dict:
 
 
 @mcp.tool()
-async def check_query_type(user_access:bool, query_type: str | None = None) -> dict:
+async def check_query_type(query_type: str | None = None) -> dict:
     """
     MCP tool to ask whether their query requires READ-ONLY or READ-WRITE access.
     
@@ -102,7 +102,6 @@ async def check_query_type(user_access:bool, query_type: str | None = None) -> d
     - Reject invalid choices with a polite error.
     
     Args: 
-        - user_access (bool): Whether the user has access (True/False).
         - query_type (str | None): Optional query type.
     Returns:
         dict: Elicitation or query type confirmation.
