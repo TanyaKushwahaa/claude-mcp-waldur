@@ -14,9 +14,8 @@ import time
 import os
 import httpx
 from dotenv import load_dotenv
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 from config import WALDUR_BASE_URL, VERIFY_SSL
-from utils import normalise_waldur_token
 
 load_dotenv()
 
