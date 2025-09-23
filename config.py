@@ -1,7 +1,7 @@
 import os
 import json
 import httpx
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 
 import environ
 
