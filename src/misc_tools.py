@@ -10,10 +10,10 @@ safely and consistently.
 
 import httpx
 import logging
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 from config import WALDUR_BASE_URL, VERIFY_SSL
 
-from utils import normalise_waldur_token
+from src.utils import normalise_waldur_token
 
 @mcp.tool()
 async def infer_http_method(query: str) -> dict:
@@ -162,11 +162,13 @@ async def invite_user(WALDUR_API_TOKEN: str, parsed_intent:dict) -> str | dict:
         return "Missing Waldur API token."
 
     method = "user-invitations"
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + f"{method}/"
     payload  = parsed_intent['payload']
 
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}",
+        "Authorization": WALDUR_API_TOKEN,
         "Content-Type":"application/json"
     }
     if "role" not in payload or not payload['role']:
