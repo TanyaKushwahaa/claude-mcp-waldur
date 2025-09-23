@@ -6,9 +6,9 @@ It includes both read-only and read-write MCP servers, utility tools, and Waldur
 
 ## Features :rocket:
 
-- Two MCP servers
-  - read-only: Safe, non-destructive queries.
-  - read-write: Full access to create, update, and delete resources in Waldur.
+- **Two MCP servers**
+  - **read-only**: Safe, non-destructive queries.
+  - **read-write**: Full access to create, update, and delete resources in Waldur.
 - Waldur API integration
   - Separate modules for GET, POST, PATCH, and DELETE.
   - Authentication helpers (waldur_auth_tool.py) to manage tokens and access.
@@ -60,7 +60,7 @@ Create and activate a virtual environment:
 python -m venv .venv
 source .venv/bin/activate   # On Linux/Mac
 .venv\Scripts\activate      # On Windows
-nstall dependencies with [UV]()
+Install dependencies with [UV](https://docs.astral.sh/uv/)
 uv sync
 
 ## Configuration :key:
@@ -74,7 +74,7 @@ Example .env.example:
   WALDUR_BASE_URL=https://waldur.example.com/api/
   MCP_DATA_PATH=./data
   VERIFY_SSL=True
-3. Add example_config_claude/claude_desktop_config_example.json in C:\Users\ib22493\AppData\Roaming\Claude
+3. Place the claude_desktop_config_example.json file in the Claude config directory on your system (e.g., AppData\Roaming\Claude on Windows or ~/.config/Claude on Linux/Mac).
 
 ## Documentation :book:
 
@@ -91,4 +91,4 @@ Example .env.example:
 ## License :scroll:
 
 This project is licensed under the terms of the MIT license.
-MIT License — see [LICENSE]() for details.
+MIT License — see [LICENSE](./LICENSE) for details.
