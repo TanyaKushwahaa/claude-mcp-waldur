@@ -56,7 +56,7 @@ claude-mcp-waldur/
 ## Installation :gear:
 
 ```bash
-git clone https://github.com/yourusername/claude-mcp-waldur.git
+git clone https://github.com/TanyaKushwahaa/claude-mcp-waldur.git
 cd claude-mcp-waldur
 ```
 
