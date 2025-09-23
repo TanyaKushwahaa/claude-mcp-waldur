@@ -8,6 +8,7 @@ def task_planner(user_query:str) -> str:
     Each tool should be listed with its name and a short reason why it's being used. USE ONLY THE TOOLS PROVIDED. Also use PAGINATION for any query where relevant, as Waldur supports pagination.
 
     Available Tools (alphabetical order):
+    - check_query_type: Ask the user if their request is READ-ONLY or READ-WRITE and validate input.
     - delete_from_waldur_parsed: Delete parsed data from Waldur.
     - get_customer_spend_info: Get customer spending information.
     - get_from_waldur: General GET request to Waldur, after parsing the endpoint and parameters.
@@ -28,16 +29,17 @@ def task_planner(user_query:str) -> str:
     Output: 
     The very first MCP tool to use is always greet_user to greet the user, then list the next relevant MCP tools:
     1. greet_user: Greets the user and elicits intent from their request.
-    2. get_waldur_api_token: Authorise the user and get the Waldur API token to further access info from Waldur.
-    Step 3 depends on the query:
+    2. check_query_type: confirm READ-ONLY vs READ-WRITE.
+    3. get_waldur_api_token: Authorise the user and get the Waldur API token to further access info from Waldur.
+    Step 4 depends on the query:
       - If checking existing entities, use get_from_waldur.
       - If making a new or less direct request, use retrieve_api_endpoint.
-    3. get_from_waldur: Check if the user and project exist in the system  
-    OR  
-    3. retrieve_api_endpoint: Find the relevant API endpoint to make the request.
-    4. get_uuid: Retrieve UUIDs for both the user and the project.
-    5. infer_http_method: Infer which REST method to use.
-    6. post_to_waldur_parsed: Use the UUIDs to add the user to the project.
+    4. Either:
+        - get_from_waldur: Check if the user and project exist in the system.  
+        - retrieve_api_endpoint: Find the relevant API endpoint to make the request.
+    5. get_uuid: Retrieve UUIDs for both the user and the project.
+    6. infer_http_method: Infer which REST method to use.
+    7. post_to_waldur_parsed: Use the UUIDs to add the user to the project.
     IMPORTANT: If you do not know the exact link to make the request, always make sure to use retrieve_api_endpoint to find the right API endpoint.
 
     input: {user_query}
