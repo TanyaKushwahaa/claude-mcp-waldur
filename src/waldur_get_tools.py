@@ -88,7 +88,7 @@ async def get_uuid(
     
     if entity not in endpoint_map:
         return f"Sorry, I do not recognise the entity type '{entity}'."
-    # Adds "Token " if it does not exist
+    # Add "Token " if it does not exist
     WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + endpoint_map[entity]
     headers = {
@@ -215,7 +215,7 @@ async def call_waldur_apis(
     Returns:
     - str: User-friendly summary of all retrieved data or error message.
     """
-    # Adds "Token " if it does not exist
+    # Add "Token " if it does not exist
     WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + f"{method}/"
     headers = {
