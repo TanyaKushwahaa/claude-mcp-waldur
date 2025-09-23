@@ -31,12 +31,12 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
     1. Fetch active IdentityProvider from Waldur to get client_id, client_secret, discovery_url.
     1. Request device code from Keycloak.
     2. Show user verification URL and code.
-    3. Prompt user to authorise and provide OIDC token.
-    4. Exchange OIDC token for Waldur API token.
+    3. Prompt user to complete authorise in browser and confirm when done.
+    4. Exchange completed device authorisation for Waldur API token.
     Args: 
         authorised (str | None) : "yes" or "no" ONLY. 
             - Use "no" initially (user not authorised yet).
-            - Use "yes" once the user has completed authorisation and supplied the OIDC token.
+            - Use "yes" once the user has completed the browser authorisation process.
     Returns:
         str: Waldur API token with user role infomration, OR
         dict: elicitation object prompting the user to authorise.
