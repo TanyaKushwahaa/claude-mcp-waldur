@@ -1,9 +1,9 @@
 # src/tools/waldur_post_tools.py
 import httpx
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 from config import WALDUR_BASE_URL, VERIFY_SSL
 
-from utils import normalise_waldur_token
+from src.utils import normalise_waldur_token
 
 @mcp.tool()
 async def post_to_waldur_parsed(parsed_intent:dict) -> str | dict:
@@ -48,10 +48,12 @@ async def post_to_waldur_parsed(parsed_intent:dict) -> str | dict:
     http_method = parsed_intent['http_method']
     payload = parsed_intent['payload']
 
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     # Verify user_access from Waldur
     url_user_access = WALDUR_BASE_URL + "openportal/whoami/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}"
+        "Authorization": WALDUR_API_TOKEN
     }
     params = {
         "email": email
@@ -152,7 +154,7 @@ async def post_to_waldur(WALDUR_API_TOKEN: str, method: str, http_method: str = 
     """
     url = WALDUR_BASE_URL + f"{method}/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}",
+        "Authorization": WALDUR_API_TOKEN,
         "Content-Type":"application/json"
     }
     

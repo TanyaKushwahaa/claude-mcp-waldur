@@ -1,9 +1,9 @@
 # src/tools/waldur_patch_tools.py
 import httpx
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 from config import WALDUR_BASE_URL, VERIFY_SSL
 
-from utils import normalise_waldur_token
+from src.utils import normalise_waldur_token
 
 @mcp.tool()
 async def patch_to_waldur_parsed(parsed_intent:dict) -> str:
@@ -47,11 +47,13 @@ async def patch_to_waldur_parsed(parsed_intent:dict) -> str:
 
     if user_access=="not a staff":
         return f"Access denied, you are not a staff user."
-
+    
+    # Add "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     # Verify user_access from Waldur
     url_user_access = WALDUR_BASE_URL + "openportal/whoami/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}"
+        "Authorization": WALDUR_API_TOKEN
     }
     params = {
         "email": email
@@ -127,7 +129,7 @@ async def patch_to_waldur(
     user_data.pop("uuid", None) #Removing uuid from body
     
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}",
+        "Authorization": WALDUR_API_TOKEN,
         "Content-Type":"application/json"
     }
     
