@@ -1,9 +1,6 @@
 [project]
 name = "claude-mcp-waldur"
 version = "0.1.0"
-description = "[project]
-name = "mcp-basic-tools"
-version = "0.1.0"
 description = "MCP servers and tools for integrating Claude with Waldur API for Waldur resource management"
 readme = "README.md"
 requires-python = ">=3.13"
