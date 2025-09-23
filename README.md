@@ -97,7 +97,7 @@ VERIFY_SSL=True
 - **Windows:** `%APPDATA%\Roaming\Claude`
 - **macOS:** `~/Library/Application Support/Claude`
 - **Linux:** `~/.config/Claude`
-- 
+  
 4. **Restart Claude Desktop** and start querying: "List my Waldur projects"
 
 ## Documentation :book:
