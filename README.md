@@ -4,7 +4,7 @@ This project provides MCP (Model Context Protocol) servers and tools for interac
 
 It includes both read-only and read-write MCP servers, utility tools, and Waldur API operation modules.
 
-:rocket: ## Features
+:rocket:## Features
 
 - Two MCP servers
   - read-only: Safe, non-destructive queries.
@@ -20,7 +20,7 @@ It includes both read-only and read-write MCP servers, utility tools, and Waldur
 - Extensible design
   - Modular src/ structure for easy contributions and new tools.
 
-:open_file_folder: ## Project Structure
+:open_file_folder:## Project Structure
 
 claude-mcp-waldur/
 ├── .env                     # Environment variables (local config)
@@ -52,7 +52,7 @@ claude-mcp-waldur/
     └── prompts/
         └── task_planner.py  # Prompt utilities for planning
 
-:gear: ## Installation
+:gear:## Installation
 
 git clone https://github.com/yourusername/claude-mcp-waldur.git
 cd claude-mcp-waldur
@@ -63,7 +63,7 @@ source .venv/bin/activate   # On Linux/Mac
 nstall dependencies with [UV]()
 uv sync
 
-:key: ## Configuration
+:key:## Configuration
 
 This project requires environment variables defined in a .env file in the root directory.
 
@@ -76,7 +76,7 @@ Example .env.example:
   VERIFY_SSL=True
 3. Add example_config_claude/claude_desktop_config_example.json in C:\Users\ib22493\AppData\Roaming\Claude
 
-:book: ## Documentation
+:book:## Documentation
 - [Waldur API Reference](https://docs.waldur.com/latest/)
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro)
 
@@ -87,5 +87,5 @@ Example .env.example:
 3. Commit your changes (git commit -m 'Add my new tool')
 4. Push to your fork and open a PR
 
-:scroll: ## License
+:scroll:## License
 MIT License — see [LICENSE]() for details.
