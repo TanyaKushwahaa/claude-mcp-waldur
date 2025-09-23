@@ -1,9 +1,9 @@
 # src/tools/waldur_get_tools.py
 from config import WALDUR_BASE_URL, VERIFY_SSL
-from mcp_instance import mcp
+from src.mcp_instance import mcp
 import httpx
 
-from utils import normalise_waldur_token
+from src.utils import normalise_waldur_token
 
 # MCP Tool to retrieve UUIDs for various entities in Waldur
 @mcp.tool()
@@ -88,10 +88,11 @@ async def get_uuid(
     
     if entity not in endpoint_map:
         return f"Sorry, I do not recognise the entity type '{entity}'."
-    
+    # Adds "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + endpoint_map[entity]
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}"
+        "Authorization": WALDUR_API_TOKEN
     }
     params = {
         "short_name": short_name
@@ -214,9 +215,11 @@ async def call_waldur_apis(
     Returns:
     - str: User-friendly summary of all retrieved data or error message.
     """
+    # Adds "Token " if it does not exist
+    WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + f"{method}/"
     headers = {
-        "Authorization": f"Token {WALDUR_API_TOKEN}"
+        "Authorization": WALDUR_API_TOKEN
     }
 
     all_data = []
