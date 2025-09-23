@@ -1,0 +1,21 @@
+{   "mcpServers": {
+      "read-only":{
+          "command":"uv",
+          "args":[
+            "--directory",
+            "claud-mcp-waldur/servers/",
+            "run",
+            "read-only.py"
+          ]
+      },
+      "read-write":{
+          "command":"uv",
+          "args":[
+            "--directory",
+            "claud-mcp-waldur/servers/",
+            "run",
+            "read-write.py"
+          ]
+      }
+    }
+  }
