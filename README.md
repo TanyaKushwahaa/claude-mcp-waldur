@@ -64,6 +64,9 @@ cd claude-mcp-waldur
 
 ```bash
 python -m venv .venv
+```
+
+```bash
 source .venv/bin/activate   # On Linux/Mac
 ```
 
@@ -93,12 +96,38 @@ MCP_DATA_PATH=./data
 VERIFY_SSL=True
 ```
 
-3. **Add to Claude Desktop:** Place the `claude_desktop_config_example.json` file in your Claude config directory:
-- **Windows:** `%APPDATA%\Roaming\Claude`
-- **macOS:** `~/Library/Application Support/Claude`
-- **Linux:** `~/.config/Claude`
+## Add to Claude Desktop :computer:
+**1. Copy and rename the configuration file:**
+```bash
+cp claude_desktop_config_example.json claude_desktop_config.json
+```
+**2.Edit the configuration file:** Open claude_desktop_config.json and replace /path/to/your/server with the actual path where you cloned this repository.
+```json
+{
+  "mcpServers": {
+    "waldur-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory", 
+        "C:/Users/yourname/waldur-mcp-server",
+        "run", 
+        "main.py"
+      ]
+    }
+  }
+}
+```
+
+**3. Move the file to Claude's configuration directory:**
+- **Windows:** `%APPDATA%\Roaming\Claude\claude_desktop_config.json`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+**Note:** 
+
+Example (Linux/macOS): On Windows, `%APPDATA%` is an environment variable that typically expands to `C:\Users\[your-username]\AppData\Roaming`
   
-4. **Restart Claude Desktop** and start querying: "List my Waldur projects"
+**4. Restart Claude Desktop** completely for the changes to take effect and start querying: "List my Waldur projects"
 
 ## Documentation :book:
 
