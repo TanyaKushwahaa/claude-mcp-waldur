@@ -102,7 +102,8 @@ VERIFY_SSL=True
 cp claude_desktop_config_example.json claude_desktop_config.json
 ```
 **2.Edit the configuration file:** Open claude_desktop_config.json and replace /path/to/your/server with the actual path where you cloned this repository.
-```json{
+```json
+{
   "mcpServers": {
     "waldur-mcp": {
       "command": "uv",
