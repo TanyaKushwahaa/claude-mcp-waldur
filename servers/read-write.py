@@ -11,13 +11,18 @@ error = validate_config()
 if error:
     print(f"Configuration error: {error}") # just to alert you when running script directly
 
+# Write Tools
 from src.waldur_patch_tools import patch_to_waldur_parsed
 from src.waldur_delete_tools import delete_from_waldur_parsed
 from src.waldur_post_tools import post_to_waldur_parsed
 
+# Misc Tools
 from src.waldur_auth_tool import get_waldur_api_token
 from src.misc_tools import greet_user, check_query_type, infer_http_method
 from src.retrieve_api_endpoint_tool import retrieve_api_endpoint
+
+# Read Tools
+from src.waldur_get_tools import get_from_waldur, get_uuid
 
 # Prompts
 from src.prompts import task_planner
