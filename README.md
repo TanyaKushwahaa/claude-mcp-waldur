@@ -102,7 +102,7 @@ VERIFY_SSL=True
 cp claude_desktop_config_example.json claude_desktop_config.json
 ```
 **2.Edit the configuration file:** Open claude_desktop_config.json and replace /path/to/your/server with the actual path where you cloned this repository.
-`{
+```json{
   "mcpServers": {
     "waldur-mcp": {
       "command": "uv",
@@ -114,7 +114,7 @@ cp claude_desktop_config_example.json claude_desktop_config.json
       ]
     }
   }
-}`
+}```
 
 **3. Move the file to Claude's configuration directory:**
 - **Windows:** `%APPDATA%\Roaming\Claude\claude_desktop_config.json`
