@@ -64,6 +64,9 @@ cd claude-mcp-waldur
 
 ```bash
 python -m venv .venv
+```
+
+```bash
 source .venv/bin/activate   # On Linux/Mac
 ```
 
