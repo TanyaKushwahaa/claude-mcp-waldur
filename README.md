@@ -96,7 +96,7 @@ MCP_DATA_PATH=./data
 VERIFY_SSL=True
 ```
 
-## Add to Claude Desktop
+## Add to Claude Desktop :computer:
 **1. Copy and rename the configuration file:**
 ```bash
 cp claude_desktop_config_example.json claude_desktop_config.json
