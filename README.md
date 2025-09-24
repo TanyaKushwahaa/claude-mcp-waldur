@@ -114,7 +114,8 @@ cp claude_desktop_config_example.json claude_desktop_config.json
       ]
     }
   }
-}```
+}
+```
 
 **3. Move the file to Claude's configuration directory:**
 - **Windows:** `%APPDATA%\Roaming\Claude\claude_desktop_config.json`
