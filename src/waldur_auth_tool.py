@@ -65,7 +65,7 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
         # Step 1: Request device code
         data_for_device_auth = {
             "client_id":client_id,
-            "client_secret":client_secret,
+            # "client_secret":client_secret,
             "scope": "openid profile email"
         }
         async with httpx.AsyncClient(verify=VERIFY_SSL) as client:
@@ -90,7 +90,7 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
     "grant_type":"urn:ietf:params:oauth:grant-type:device_code",
     "device_code":device_code,
     "client_id":client_id,
-    "client_secret":client_secret
+    # "client_secret":client_secret
 }
 
     # Step 2: If authorised is "yes", do a single check first, then use the supplied OIDC token
