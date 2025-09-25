@@ -154,7 +154,7 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
                 }
 
     # Step 4: Exchange OIDC token for Waldur API token
-    url = WALDUR_BASE_URL + "openportal/get_API_token/"
+    url = WALDUR_BASE_URL + "openportal/get_api_token/"
     headers = {
         "Authorization": f"Bearer {OIDC_TOKEN}"
     }
