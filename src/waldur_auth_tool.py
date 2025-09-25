@@ -28,7 +28,6 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
     MCP tool to obtain Waldur API token using device authorisation flow.
     
     Steps:
-    1. Fetch active IdentityProvider from Waldur to get client_id, client_secret, discovery_url.
     1. Request device code from Keycloak.
     2. Show user verification URL and code.
     3. Prompt user to complete authorise in browser and confirm when done.
@@ -47,27 +46,21 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
 # -----------------
     global DEVICE_SESSION
 
-    # Step 1: Fetch dynamic client credentials from Waldur
-    id_provider_url = WALDUR_BASE_URL+"openportal/get_keycloak_conf/"
-    id_provider_response = httpx.get(id_provider_url, timeout=5.0)
-    if id_provider_response.status_code==200:
-        keycloak_data = id_provider_response.json()
-        client_id = keycloak_data["client_id"]
-        client_secret = keycloak_data["client_secret"]
-        discovery_url = keycloak_data["discovery_url"]
-        if discovery_url:
-            discovery_url_response = httpx.get(
-            discovery_url,
-            timeout=5.0)
-            data_discovery_url = discovery_url_response.json()
-            device_endpoint = data_discovery_url["device_authorization_endpoint"]
-            token_endpoint = data_discovery_url["token_endpoint"]
-        else:
-            return "Discovery URL does not exist."
+    client_id = "homeport-public"
+    discovery_url = "https://keycloak-dev.isambard.ac.uk/realms/isambard/.well-known/openid-configuration"
+    device_endpoint = "https://keycloak-dev.isambard.ac.uk/realms/isambard/protocol/openid-connect/auth/device"
+    token_endpoint = "https://keycloak-dev.isambard.ac.uk/realms/isambard/protocol/openid-connect/token"
+    
+    if discovery_url:
+        discovery_url_response = httpx.get(
+        discovery_url,
+        timeout=5.0)
+        data_discovery_url = discovery_url_response.json()
+        device_endpoint = data_discovery_url["device_authorization_endpoint"]
+        token_endpoint = data_discovery_url["token_endpoint"]
     else:
-        return f"Cannot extract Keycloak configuration. Status: {id_provider_response.status_code}"
+        return "Discovery URL does not exist."
 
-        
     if not DEVICE_SESSION:
         # Step 1: Request device code
         data_for_device_auth = {
