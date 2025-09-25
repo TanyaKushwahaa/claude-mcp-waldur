@@ -10,12 +10,10 @@
 This tool uses shared OAuth2 client credentials to authenticate with Keycloak as an application. Individual user authentication happens securely via the device authorisation flow. 
 Each user receives their own unique API token."""
 
-import time
-import os
 import httpx
 from dotenv import load_dotenv
 from src.mcp_instance import mcp
-from config import WALDUR_BASE_URL, VERIFY_SSL
+from config import WALDUR_BASE_URL, VERIFY_SSL, CLIENT_ID, DISCOVERY_URL, DEVICE_ENDPOINT, TOKEN_ENDPOINT
 
 load_dotenv()
 
@@ -46,11 +44,10 @@ async def get_waldur_api_token(authorised: str | None) -> str | dict:
 # -----------------
     global DEVICE_SESSION
 
-    client_id = "homeport-public"
-    discovery_url = "https://keycloak-dev.isambard.ac.uk/realms/isambard/.well-known/openid-configuration"
-    device_endpoint = "https://keycloak-dev.isambard.ac.uk/realms/isambard/protocol/openid-connect/auth/device"
-    token_endpoint = "https://keycloak-dev.isambard.ac.uk/realms/isambard/protocol/openid-connect/token"
-    
+    client_id = CLIENT_ID
+    discovery_url = DISCOVERY_URL
+    token_endpoint = TOKEN_ENDPOINT
+    device_endpoint = DEVICE_ENDPOINT
     if discovery_url:
         discovery_url_response = httpx.get(
         discovery_url,
