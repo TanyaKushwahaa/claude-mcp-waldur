@@ -35,6 +35,9 @@ async def get_project_short_name(WALDUR_API_TOKEN: str, project_name: str, custo
     Returns:
         str: Project short name or error message.
     """
+
+    if not WALDUR_API_TOKEN:
+        return "Missing Waldur API token."
     
     WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)  
     url = WALDUR_BASE_URL + "openportal/project_short_name/"
@@ -79,6 +82,9 @@ async def get_customer_spend_info(WALDUR_API_TOKEN: str, customer: str | None = 
     Returns:
         dict | str: Customer spend info or elicitation message.
     """
+
+    if not WALDUR_API_TOKEN:
+        return "Missing Waldur API token."
 
     if not customer:
         return {"type":"elicitation/create",
