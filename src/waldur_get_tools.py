@@ -126,68 +126,105 @@ async def get_uuid(
         except Exception as e: 
             return f"Error connecting to the server: {e}"
     
+
 @mcp.tool()
 async def get_from_waldur(parsed_intent: dict) -> str:
     """
-    This MCP tool makes a Waldur API call using the parsed intent, which includes:
+    This MCP tool makes a Waldur API call using the parsed intent.
     
     parsed_intent should include:
     - WALDUR_API_TOKEN (str)
-    - method (str): e.g., 'projects', 'customers', etc.
-    - http_method (str): 'GET', 'POST', etc.
-    - payload (dict): parameters for the request
+    - method (str): API endpoint (e.g., 'projects', 'customers', 'users', 'marketplace-resources', etc.)
+    - http_method (str): 'GET'
+    - payload (dict): Query parameters for filtering results
 
     Example input:
     parsed_intent = {
         "WALDUR_API_TOKEN": "Token 2b2b323ki3hinrknfwdwd2322",
         "method": "projects",
         "http_method": "GET",
-        "payload": {"short_name": "test"}
+        "payload": {"name": "Quantum Research"}
     }
 
     ============================================
-    AVOID MISINTERPRETING PROJECT/CUSTOMER NAMES
+    FIELD FILTERING (RECOMMENDED FOR TOKEN EFFICIENCY)
     ============================================
-    If the user's query says:
-        "Add user ... to project Scientific Research in Bristol University"
-    Then your GET query should be split into:
-        1. First check if customer with name "Bristol University" exists:
-            {
-                "WALDUR_API_TOKEN": "Token 2b2b323ki3hinrknfwdwd2322",
-                "method": "customers",
-                "http_method": "GET",
-                "payload": {"name": "Bristol University"}
-            }
+    By default, this tool returns only essential fields to minimise token usage.
+    To request specific fields, include them in payload:
+        {"field": ["uuid", "name", "email"]}
 
-        2. Then look for a project with name "Scientific Research":
-            {
-                "WALDUR_API_TOKEN": "Token 2b2b323ki3hinrknfwdwd2322",
-                "method": "projects",
-                "http_method": "GET",
-                "payload": {"name": "Scientific Research"}
-            }
+    ALWAYS use field filtering when you only need specific information.
+    Example: If you just need project names and UUIDs:
+        {"name": "Research", "field": ["uuid", "name"]}
 
-    - DO NOT search for the entire phrase "Scientific Research in Bristol University" as a project name.
-    - DO NOT assume the user meant a different customer/project if no exact match is found.
+    ============================================
+    FILTERING & SEARCH PARAMETERS
+    ============================================
+    The Waldur API supports various filter parameters. Common patterns:
+    
+    - Most resources support filtering by "name" (partial match, case-insensitive)
+    - To filter by related resources, use the resource name (singular) with UUID:
+      * Projects by organization: {"customer": "uuid"}
+      * Resources by project: {"project": "uuid"}
+    - Field names typically match the resource attribute names
+    
+    When unsure about available filters:
+    1. Try common patterns first (name, uuid, related resource names)
+    2. Make a test call with minimal filters and examine the response structure
+    3. Response fields often indicate what can be filtered
+    
+    ============================================
+    PARSING HIERARCHICAL NAMES
+    ============================================
+    When users mention "Project X in Organisation Y":
+    1. Search for the organisation (customer) by name first
+    2. Then search for the project by name within that organisation
+    3. DO NOT concatenate names (e.g., searching for "Project X in Organisation Y" as a single project name)
 
-    ======================================
-    SYSTEM RESPONSE GUIDELINES
-    ======================================
-    - If a resource (e.g., customer or project) is not found, elicit clarification.
-    - NEVER assume or hallucinate information.
-    - ALWAYS explain results in user-friendly language.
-    - If tool access fails, apologise and state you are having trouble connecting (do not fabricate an answer).
+    Example: "Add user to Scientific Research in Bristol University"
+    Step 1: Find customer "Bristol University"
+    Step 2: Find project "Scientific Research" 
+    DO NOT search for project named "Scientific Research in Bristol University"
+    
+    ============================================
+    ERROR HANDLING
+    ============================================
+    - If a resource is not found, inform the user and ask for clarification
+    - NEVER assume or hallucinate data
+    - If the API is unreachable, state this clearly
+    - For ambiguous queries, ask the user to clarify before making assumptions
 
     Returns:
-        str: User-friendly summary or error message from the Waldur API call. 
+        str: JSON string containing:
+            - total_count (int): Number of results
+            - method (str): The endpoint queried
+            - data (list): Array of objects with requested/essential fields
     """
-
-
     WALDUR_API_TOKEN = parsed_intent['WALDUR_API_TOKEN']
     method = parsed_intent['method']
     http_method = parsed_intent['http_method']
-    payload = parsed_intent['payload']
-    
+    payload = dict(parsed_intent.get('payload', {}))
+
+    # Define essential fields for each entity type
+    essential_fields = {
+        'customers': ['uuid', 'name', 'abbreviation', 'projects_count', 'users_count', 'email'],
+        'projects': ['uuid', 'name', 'short_name', 'customer_name', 'created', 'start_date', 'end_date'],
+        'users': ['uuid', 'username', 'email', 'full_name', 'is_staff'],
+        'user-invitations': ['email', 'created', 'state'],
+        'marketplace-resources': ['uuid', 'name', 'state', 'project_name', 'customer_name', 'offering_name', 'plan_name'],
+        'marketplace-orders': ['uuid', 'state', 'type', 'resource_name', 'offering_name', 'project_name', 'created'],
+        'roles': ['uuid', 'name', 'description', 'is_active'],
+    }
+
+    # Hybrid logic: if Claude didn't request fields, inject essentials
+    if 'field' not in payload and method in essential_fields:
+        payload['field'] = essential_fields[method]
+        logger.info(f"DEBUG: Injected fields! payload['field'] = {payload['field']}")
+    else:
+        logger.info(f"DEBUG: Did NOT inject fields")
+
+    logger.info(f"DEBUG: payload after injection = {payload}")
+
     result = await call_waldur_apis(
         WALDUR_API_TOKEN=WALDUR_API_TOKEN,
         method=method, 
@@ -213,8 +250,9 @@ async def call_waldur_apis(
     - arguments (dict | None): Parameters for the GET request, e.g., {"name": "Bristol University"}
 
     Returns:
-    - str: User-friendly summary of all retrieved data or error message.
+    - str: UJSON format for easy analysis of retrieved data or error message.
     """
+
     # Add "Token " if it does not exist
     WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + f"{method}/"
@@ -223,7 +261,7 @@ async def call_waldur_apis(
     }
 
     all_data = []
-    MAX_PAGES = 1000
+    MAX_PAGES = 10000
     async with httpx.AsyncClient(follow_redirects=True, verify=VERIFY_SSL) as client:
         page = 1
         while page<=MAX_PAGES: # to prevent loop going infinitely, if there's any server issue
@@ -236,7 +274,7 @@ async def call_waldur_apis(
                 params = {
                     "page": page
                 }  # Start with page 1 for pagination
-                
+
             try:
                 response = await client.get(url, headers=headers, params=params, timeout=10.0)
                 if response.status_code in (200, 201):
@@ -256,13 +294,21 @@ async def call_waldur_apis(
                 elif response.status_code == 404: # If the API returns 404, treat it as no more results.
                     break
                 else: # Other errors indicate problems
-                    return f"Authentication failed. Please check your Waldur API token. Error: {response.status_code}."
+                    return f"API error: {response.status_code}."
             except Exception as e:
                 return f"Connection error: {e}"  
 
-    # After fetching all pages, format the results   
     if all_data:
-        description = "\n\n".join(["\n".join([f"{k} - {v}" for k, v in item.items()]) for item in all_data])
-        return f"Here is the data from Waldur for {method}:\n\n{description}."
+        import json
+        return json.dumps({
+            "total_count": len(all_data),
+            "method": method,
+            "data": all_data
+        }, indent=2, default=str)
     else:
-        return f"No data found for {method}."        
+        import json
+        return json.dumps({
+            "total_count": 0,
+            "method": method,
+            "data": []
+        })
