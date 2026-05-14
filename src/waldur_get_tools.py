@@ -133,12 +133,16 @@ async def get_uuid(
 async def get_from_waldur(parsed_intent: dict) -> str:
     """
     This MCP tool makes a Waldur API call using the parsed intent.
-    
+
     parsed_intent should include:
     - WALDUR_API_TOKEN (str)
-    - method (str): API endpoint (e.g., 'projects', 'customers', 'users', 'marketplace-resources', etc.)
+    - method (str): API endpoint (e.g., 'projects', 'customers', 'users',
+                    'marketplace-resources', etc.)
     - http_method (str): 'GET'
     - payload (dict): Query parameters for filtering results
+    - max_results (int, optional): cap on rows returned. None = use default.
+    - fetch_all_pages (bool, optional): if True, paginate through every page.
+                                        Default False = first page only.
 
     Example input:
     parsed_intent = {
@@ -149,10 +153,41 @@ async def get_from_waldur(parsed_intent: dict) -> str:
     }
 
     ============================================
-    FIELD FILTERING (RECOMMENDED FOR TOKEN EFFICIENCY)
+    PAGINATION (CRITICAL — READ FIRST)
     ============================================
-    By default, this tool returns only essential fields to minimise token usage.
-    To request specific fields, include them in payload:
+    By DEFAULT this tool returns ONLY the first page (≤100 rows). The response
+    includes "total_available" so you can see how many rows exist on the server,
+    and "truncated": true if there are more.
+
+    DO THIS for almost every query:
+    - Pass narrow filters in payload (e.g. {"name": "Bristol", "customer": "<uuid>"}).
+    - Read the first page; if total_available > returned_count, decide what to do.
+    - For specific records: tell the user there are N matches, ask which one,
+      or filter more tightly. DO NOT paginate to find one row.
+
+    DO NOT use fetch_all_pages=True unless:
+    - The user explicitly asks for "all" of something AND the total is small
+      (under a few hundred), AND
+    - You actually need every row in context to answer the question.
+
+    For statistical questions ("how many projects per institution?", "onboarding
+    over time", "summarise usage across customers") DO NOT list everything and
+    count it in your head. Use summarise_from_waldur if available, or tell the
+    user you cannot summarise the full dataset through listing.
+
+    For "top N" or "biggest consumers" questions, use top_n_from_waldur if
+    available. Listing all rows and sorting in context will exhaust the token
+    budget on large Waldur instances (thousands of projects/users).
+
+    Use max_results=N when the user asks for a bounded list ("show me 20
+    projects", "first 50 users"). This is more efficient than fetching a full
+    page and slicing.
+
+    ============================================
+    FIELD FILTERING (TOKEN EFFICIENCY)
+    ============================================
+    By default this tool returns only essential fields per entity to minimise
+    token usage. To request specific fields, include them in payload:
         {"field": ["uuid", "name", "email"]}
 
     ALWAYS use field filtering when you only need specific information.
@@ -163,31 +198,31 @@ async def get_from_waldur(parsed_intent: dict) -> str:
     FILTERING & SEARCH PARAMETERS
     ============================================
     The Waldur API supports various filter parameters. Common patterns:
-    
     - Most resources support filtering by "name" (partial match, case-insensitive)
     - To filter by related resources, use the resource name (singular) with UUID:
       * Projects by organization: {"customer": "uuid"}
       * Resources by project: {"project": "uuid"}
     - Field names typically match the resource attribute names
-    
+
     When unsure about available filters:
     1. Try common patterns first (name, uuid, related resource names)
     2. Make a test call with minimal filters and examine the response structure
     3. Response fields often indicate what can be filtered
-    
+
     ============================================
     PARSING HIERARCHICAL NAMES
     ============================================
     When users mention "Project X in Organisation Y":
     1. Search for the organisation (customer) by name first
     2. Then search for the project by name within that organisation
-    3. DO NOT concatenate names (e.g., searching for "Project X in Organisation Y" as a single project name)
+    3. DO NOT concatenate names (e.g., searching for "Project X in
+       Organisation Y" as a single project name)
 
     Example: "Add user to Scientific Research in Bristol University"
     Step 1: Find customer "Bristol University"
-    Step 2: Find project "Scientific Research" 
+    Step 2: Find project "Scientific Research"
     DO NOT search for project named "Scientific Research in Bristol University"
-    
+
     ============================================
     ERROR HANDLING
     ============================================
@@ -198,15 +233,20 @@ async def get_from_waldur(parsed_intent: dict) -> str:
 
     Returns:
         str: JSON string containing:
-            - total_count (int): Number of results
+            - returned_count (int): Number of rows in this response
+            - total_available (int): Total rows available on server
+            - truncated (bool): True if more rows exist that weren't returned
             - method (str): The endpoint queried
             - data (list): Array of objects with requested/essential fields
+            - hint (str | null): Guidance for next step if truncated
     """
     WALDUR_API_TOKEN = parsed_intent['WALDUR_API_TOKEN']
     method = parsed_intent['method']
     http_method = parsed_intent['http_method']
     payload = dict(parsed_intent.get('payload', {}))
-
+    max_results = parsed_intent.get('max_results')
+    fetch_all_pages = parsed_intent.get('fetch_all_pages', False)
+    
     # Define essential fields for each entity type
     essential_fields = {
         'customers': ['uuid', 'name', 'abbreviation', 'projects_count', 'users_count', 'email'],
@@ -231,86 +271,105 @@ async def get_from_waldur(parsed_intent: dict) -> str:
         WALDUR_API_TOKEN=WALDUR_API_TOKEN,
         method=method, 
         http_method=http_method, 
-        arguments=payload
+        arguments=payload,
+        max_results=max_results,
+        fetch_all_pages=fetch_all_pages,
     )
     return result
 
 # Function to call Waldur APIs with automatic pagination for GET requests
 async def call_waldur_apis(
     WALDUR_API_TOKEN: str,
-    method: str, 
-    http_method: str = "GET", 
-    arguments: dict | None = None
+    method: str,
+    http_method: str = "GET",
+    arguments: dict | None = None,
+    max_results: int | None = None,
+    fetch_all_pages: bool = False,
 ):
     """
-    Calls Waldur REST API with automatic pagination for GET requests.
-    
+    Calls Waldur REST API. By default returns the FIRST page only (≤100 rows).
+    Set fetch_all_pages=True or max_results=N to fetch more.
+
     Args:
-    - WALDUR_API_TOKEN (str)
-    - method (str): API endpoint (e.g., "customers", "projects", "users", etc.)
-    - http_method (str): HTTP method to use (only "GET" supported here)
-    - arguments (dict | None): Parameters for the GET request, e.g., {"name": "Bristol University"}
+        WALDUR_API_TOKEN (str)
+        method (str): API endpoint (e.g., "customers", "projects", "users")
+        http_method (str): only "GET" supported
+        arguments (dict | None): query params, e.g. {"name": "Bristol"}
+        max_results (int | None): hard cap on rows returned; None = no cap
+        fetch_all_pages (bool): if True, paginate to the end (old behaviour).
+                                Default False = first page only.
 
     Returns:
-    - str: UJSON format for easy analysis of retrieved data or error message.
+        str: JSON string with returned_count, total_available, truncated flag,
+             method, data, and a hint if results were truncated.
     """
-
-    # Add "Token " if it does not exist
     WALDUR_API_TOKEN = normalise_waldur_token(WALDUR_API_TOKEN)
     url = WALDUR_BASE_URL + f"{method}/"
-    headers = {
-        "Authorization": WALDUR_API_TOKEN
-    }
+    headers = {"Authorization": WALDUR_API_TOKEN}
+
+    args = dict(arguments or {})
+    args.setdefault("page_size", 100)
+
+    if max_results is not None:
+        cap = max_results
+    elif fetch_all_pages:
+        cap = None
+    else:
+        cap = args["page_size"]
 
     all_data = []
+    page = 1
     MAX_PAGES = 10000
-    async with httpx.AsyncClient(follow_redirects=True, verify=VERIFY_SSL) as client:
-        page = 1
-        while page<=MAX_PAGES: # to prevent loop going infinitely, if there's any server issue
-            if arguments: # Always set "page" from the loop counter, overriding any "page" in arguments
-                params = {
-                    **arguments, 
-                    "page": page
-                } 
-            else:
-                params = {
-                    "page": page
-                }  # Start with page 1 for pagination
+    last_response = None
 
+    async with httpx.AsyncClient(follow_redirects=True, verify=VERIFY_SSL) as client:
+        while page <= MAX_PAGES:
+            params = {**args, "page": page}
             try:
                 response = await client.get(url, headers=headers, params=params, timeout=10.0)
-                if response.status_code in (200, 201):
-                    data = response.json()
-                    if isinstance(data, list):
-                        if len(data) > 0:
-                            all_data.extend(data)
-                            page += 1
-                        else: # Empty list means no more pages
-                            break
-                    else:
-                        return f"Unexpected response format: {type(data)}, content: {repr(data)[:100]}"
-                elif response.status_code == 401:
-                    return "Authentication failed. Please check your Waldur API token."
-                elif response.status_code == 403:
-                    return "Access denied. You don't have permission for this operation."
-                elif response.status_code == 404: # If the API returns 404, treat it as no more results.
-                    break
-                else: # Other errors indicate problems
-                    return f"API error: {response.status_code}."
             except Exception as e:
-                return f"Connection error: {e}"  
+                return f"Connection error: {e}"
+            last_response = response
 
-    if all_data:
-        import json
-        return json.dumps({
-            "total_count": len(all_data),
-            "method": method,
-            "data": all_data
-        }, indent=2, default=str)
-    else:
-        import json
-        return json.dumps({
-            "total_count": 0,
-            "method": method,
-            "data": []
-        })
+            if response.status_code in (200, 201):
+                data = response.json()
+                if not isinstance(data, list):
+                    return f"Unexpected response format: {type(data)}, content: {repr(data)[:100]}"
+                if not data:
+                    break
+                all_data.extend(data)
+                if cap is not None and len(all_data) >= cap:
+                    all_data = all_data[:cap]
+                    break
+                if not fetch_all_pages and max_results is None:
+                    break
+                page += 1
+            elif response.status_code == 401:
+                return "Authentication failed. Please check your Waldur API token."
+            elif response.status_code == 403:
+                return "Access denied. You don't have permission for this operation."
+            elif response.status_code == 404:
+                break
+            else:
+                return f"API error: {response.status_code}."
+
+    total_available = len(all_data)
+    if last_response is not None:
+        try:
+            total_available = int(last_response.headers.get("x-result-count", len(all_data)))
+        except (TypeError, ValueError):
+            total_available = len(all_data)
+
+    import json
+    return json.dumps({
+        "returned_count": len(all_data),
+        "total_available": total_available,
+        "truncated": total_available > len(all_data),
+        "method": method,
+        "data": all_data,
+        "hint": (
+            "Showing first page only. Pass max_results=N or fetch_all_pages=True "
+            "in parsed_intent for more rows. For statistics across all rows, use "
+            "summarise_from_waldur instead (when available)."
+        ) if total_available > len(all_data) else None,
+    }, indent=2, default=str)
