@@ -66,7 +66,7 @@ async def delete_from_waldur_parsed(parsed_intent:dict, confirm: str | None) -> 
                 if response.status_code != 200:
                     return f"Could not verify user access (status {response.status_code})."
                 whoami_data = response.json()
-                if user_access=="staff" and whoami_data.get("is_staff")=="False":
+                if user_access=="staff" and not whoami_data.get("is_staff"):
                     return f"Access denied. you are not a staff user. Claude, no sneaky overrides allowed."
                 
                 uuid = payload.get("uuid")
