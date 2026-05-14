@@ -2,8 +2,10 @@
 from config import WALDUR_BASE_URL, VERIFY_SSL
 from src.mcp_instance import mcp
 import httpx
-
+import logging
 from src.utils import normalise_waldur_token
+
+logger = logging.getLogger(__name__)
 
 # MCP Tool to retrieve UUIDs for various entities in Waldur
 @mcp.tool()
