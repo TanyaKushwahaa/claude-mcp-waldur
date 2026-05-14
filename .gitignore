@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+.env
+.env.*
+claude_desktop_config.json
+cache/
+__pycache__/
+*.pyc
