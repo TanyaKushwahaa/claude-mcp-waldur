@@ -18,6 +18,9 @@ It includes both read-only and read-write MCP servers, utility tools, and Waldur
   - Endpoint retrieval tool (retrieve_api_endpoint_tool) to dynamically discover API routes.
 - **Extensible design**
   - Modular src/ structure for easy contributions and new tools.
+ 
+- **Server-side aggregation** (`summarise_from_waldur`)
+  - Streams Waldur list endpoints inside the MCP server and returns only bucket counts (by institution, month, or state). Enables statistical and over-time queries on production-scale instances without exhausting the LLM's context window.
 
 ## Project Structure :open_file_folder:
 
@@ -48,6 +51,7 @@ claude-mcp-waldur/
     ├── waldur_get_tools.py
     ├── waldur_patch_tools.py
     ├── waldur_post_tools.py
+    ├── waldur_summary_tools.py
     │
     └── prompts/
         └── task_planner.py  # Prompt utilities for planning
