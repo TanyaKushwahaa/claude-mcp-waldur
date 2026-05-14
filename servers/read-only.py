@@ -16,6 +16,7 @@ from src.waldur_get_tools import get_from_waldur, get_uuid
 from src.waldur_auth_tool import get_waldur_api_token
 from src.misc_tools import greet_user, check_query_type, infer_http_method
 from src.retrieve_api_endpoint_tool import retrieve_api_endpoint
+from src.waldur_summary_tools import summarise_from_waldur
 
 # Prompts
 from src.prompts import task_planner

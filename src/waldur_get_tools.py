@@ -144,14 +144,23 @@ async def get_from_waldur(parsed_intent: dict) -> str:
     - fetch_all_pages (bool, optional): if True, paginate through every page.
                                         Default False = first page only.
 
-    Example input:
+    Example input (note the level at which each key sits — this matters):
     parsed_intent = {
         "WALDUR_API_TOKEN": "Token 2b2b323ki3hinrknfwdwd2322",
         "method": "projects",
         "http_method": "GET",
-        "payload": {"name": "Quantum Research"}
+        "payload": {                      # ← Waldur query params only
+            "name": "Quantum Research",
+            "field": ["uuid", "name"],
+        },
+        "max_results": 20,                # ← TOP LEVEL, not inside payload
+        "fetch_all_pages": False,         # ← TOP LEVEL, not inside payload
     }
 
+    CRITICAL — DO NOT NEST max_results OR fetch_all_pages INSIDE payload.
+    Anything in payload is sent to Waldur as a URL query parameter. Only
+    Waldur filter fields (name, customer, project, field, etc.) belong
+    in payload. Pagination controls belong at the top level of parsed_intent.
     ============================================
     PAGINATION (CRITICAL — READ FIRST)
     ============================================
@@ -247,6 +256,19 @@ async def get_from_waldur(parsed_intent: dict) -> str:
     max_results = parsed_intent.get('max_results')
     fetch_all_pages = parsed_intent.get('fetch_all_pages', False)
     
+
+    # Defensive: if Claude misplaced the pagination controls inside payload,
+    # rescue them and warn (also strip from payload so they don't go to Waldur).
+    if 'fetch_all_pages' in payload:
+        fetch_all_pages = bool(payload.pop('fetch_all_pages'))
+        logger.warning("fetch_all_pages was placed inside payload; rescued to top level.")
+    if 'max_results' in payload:
+        try:
+            max_results = int(payload.pop('max_results'))
+        except (TypeError, ValueError):
+            payload.pop('max_results', None)
+        logger.warning("max_results was placed inside payload; rescued to top level.")
+
     # Define essential fields for each entity type
     essential_fields = {
         'customers': ['uuid', 'name', 'abbreviation', 'projects_count', 'users_count', 'email'],
